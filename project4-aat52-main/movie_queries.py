@@ -16,25 +16,30 @@ class Movie_queries(object):
 
     def q1(self):
         result = self.transaction.run("""
-            
+            MATCH (a:Actor) -[:ACTS_IN]-> () RETURN a.name, count(*) as cnt ORDER BY cnt DESC, a.name ASC LIMIT 20
         """)
         return [(r[0], r[1]) for r in result]
 
     def q2(self):
         result = self.transaction.run("""
-            
+            MATCH (m:Movie)<-[:RATED]- (u)
+            MATCH (n:Actor) -[:ACTS_IN]-> (m)
+            WITH m.title AS title, count(DISTINCT n) AS num_act
+            RETURN title, num_act
+            ORDER BY num_act DESC
+            LIMIT 1
         """)
         return [(r[0], r[1]) for r in result]
 
     def q3(self):
         result = self.transaction.run("""
-            
+            MATCH (d:Director)-[:DIRECTED]->(m:Movie) WITH d, count(distinct m.genre) as cnt WHERE cnt >= 2 RETURN d.name as dn, cnt ORDER BY cnt DESC, dn ASC
         """)
         return [(r[0], r[1]) for r in result]
 
     def q4(self):
         result = self.transaction.run("""
-            
+            MATCH (a:Actor {name: 'Kevin Bacon'})-[:ACTS_IN*4]-(a2:Actor) WHERE a <> a2 AND NOT (a)-[:ACTS_IN]->()<-[:ACTS_IN]-(a2) RETURN DISTINCT a2.name ORDER BY a2.name ASC
         """)
         return [(r[0]) for r in result]
 
@@ -53,4 +58,3 @@ if __name__ == "__main__":
     sol.transaction.close()
     sol.session.close()
     sol.driver.close()
-
